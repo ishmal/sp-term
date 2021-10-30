@@ -1,15 +1,16 @@
-import { Connection } from './connection';
-
+import { AgwConnection } from './agw-connection';
 
 
 export class SPTerm {
     constructor() {
-        this.conn = new Connection();
+        this.conn = new AgwConnection();
         this.conn.addListener(this);
     }
 
-    connect() {
-        this.conn.connect();
+    async connect() {
+        await this.conn.connect();
+        await this.conn.version();
+        await this.conn.monitor();
     }
 
     receive(data) {
@@ -22,3 +23,5 @@ function runme() {
     const term = new SPTerm();
     term.connect();
 }
+
+runme();
