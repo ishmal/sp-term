@@ -14,7 +14,8 @@ export class SPTerm {
     }
 
     receive(data) {
-        console.log("received: " + data);
+        const str = JSON.stringify(data, null, 2);
+        console.log("received: " + str);
     }
 
 }

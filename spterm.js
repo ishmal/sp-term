@@ -93,6 +93,7 @@ class AgwConnection {
     constructor() {
         this.conn = new Connection();
         this.listeners = [];
+        this.conn.addListener(this);
     }
 
     async connect() {
@@ -107,9 +108,51 @@ class AgwConnection {
         this.listeners.push(lsnr);
     }
 
-    // todoL send parsed data
+    parseCall(data, offset) {
+        let str = "";
+        for (let i = 0; i < 10; i++) {
+            const byte = data[offset + i];
+            if (!byte) {
+                break;
+            }
+            str += String.fromCharCode(byte);
+        }
+        return str;
+    }
+
+    getLength(data, offset) {
+        let len = 0;
+        for (let i = 3; i >= 0; i--) {
+            const byte = data[offset + i];
+            len = len * 256 + byte;
+        }
+        return len;
+    }
+
+    toPrintableString(data) {
+        let str = "";
+        const len = data.length;
+        for (let i = HEADER_SIZE; i < len; i++) {
+            const byte = data[i];
+            if (byte >= 32 && byte < 128) {
+                str += String.fromCharCode(byte);
+            } else {
+                str += '.';
+            }
+        }
+        return str;
+    }
+
     receive(data) {
-        lsnrs.forEach(data => lsnr.receive(data));
+        const pkt = {
+            port: data[HEADER_OFFSETS.AGWPE_PORT],
+            kind: String.fromCharCode(data[HEADER_OFFSETS.DATA_KIND]),
+            from: this.parseCall(data, HEADER_OFFSETS.CALL_FROM),
+            to: this.parseCall(data, HEADER_OFFSETS.CALL_TO),
+            length: this.getLength(data, HEADER_OFFSETS.DATA_LEN),
+            data: this.toPrintableString(data)
+        };
+        this.listeners.forEach(lsnr => lsnr.receive(pkt));
     }
 
     async send(data) {
@@ -150,7 +193,8 @@ class SPTerm {
     }
 
     receive(data) {
-        console.log("received: " + data);
+        const str = JSON.stringify(data, null, 2);
+        console.log("received: " + str);
     }
 
 }
