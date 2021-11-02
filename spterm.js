@@ -109,15 +109,15 @@ class AgwConnection {
     }
 
     parseCall(data, offset) {
-        let str = "";
+        const chars = [];
         for (let i = 0; i < 10; i++) {
             const byte = data[offset + i];
             if (!byte) {
                 break;
             }
-            str += String.fromCharCode(byte);
+            chars.push(String.fromCharCode(byte));
         }
-        return str;
+        return chars.join("");
     }
 
     getLength(data, offset) {
@@ -130,21 +130,22 @@ class AgwConnection {
     }
 
     toPrintableString(data) {
-        let str = "";
+        const chars = [];
         const len = data.length;
         for (let i = HEADER_SIZE; i < len; i++) {
             const byte = data[i];
             if (byte >= 32 && byte < 128) {
-                str += String.fromCharCode(byte);
+                chars.push(String.fromCharCode(byte));
             } else {
-                str += '.';
+                chars.push(".");
             }
         }
-        return str;
+        return chars.join("");
     }
 
     receive(data) {
         const pkt = {
+            dtg: (new Date()).toISOString(),
             port: data[HEADER_OFFSETS.AGWPE_PORT],
             kind: String.fromCharCode(data[HEADER_OFFSETS.DATA_KIND]),
             from: this.parseCall(data, HEADER_OFFSETS.CALL_FROM),
